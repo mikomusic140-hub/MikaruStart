@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MikaruStart</title>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --blur: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        body {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #ffffff;
+            transition: background 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur));
+            -webkit-backdrop-filter: blur(var(--blur));
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 30px 50px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .clock-container { padding: 12px 25px; }
+        .clock { font-size: 2.2rem; font-weight: 200; letter-spacing: 2px; }
+
+        .weather-widget { display: flex; align-items: center; padding: 10px 20px; }
+        select { background: transparent; color: white; border: none; outline: none; cursor: pointer; font-size: 0.9rem; }
+        select option { background: #1a1a1a; }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: 5vh;
+            animation: fadeIn 1s ease-out 0.2s backwards;
+        }
+
+        .logo {
+            font-size: 4.5rem;
+            font-weight: 800;
+            margin-bottom: 35px;
+            letter-spacing: -2px;
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.5) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-container { width: 100%; max-width: 600px; margin-bottom: 40px; }
+        .search-bar { display: flex; padding: 10px 15px 10px 25px; border-radius: 50px; }
+        .search-bar:focus-within { background: rgba(255, 255, 255, 0.12); transform: scale(1.02); }
+
+        input[type="text"] { flex-grow: 1; border: none; outline: none; font-size: 1.1rem; color: #fff; background: transparent; }
+        input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .search-btn { background: transparent; border: none; cursor: pointer; padding: 8px; display: flex; }
+        .search-btn svg { fill: white; width: 22px; height: 22px; opacity: 0.6; transition: 0.3s; }
+        .search-btn:hover svg { opacity: 1; }
+
+        .shortcuts { display: flex; gap: 15px; animation: fadeIn 1.2s ease-out 0.4s backwards; }
+        .shortcut-item {
+            width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .shortcut-item:hover { transform: translateY(-8px); background: rgba(255, 255, 255, 0.15); }
+        .shortcut-item svg { width: 28px; height: 28px; fill: white; opacity: 0.9; }
+
+        /* Дисклеймер */
+        footer {
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 1.5s ease-out 0.6s backwards;
+        }
+        .disclaimer {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        /* Settings */
+        .settings-icon { position: fixed; bottom: 25px; right: 25px; cursor: pointer; padding: 12px; border-radius: 50%; z-index: 101; }
+        .settings-panel {
+            position: fixed; bottom: 85px; right: 25px; width: 260px; padding: 20px; 
+            display: none; flex-direction: column; gap: 15px; z-index: 100;
+        }
+        .settings-panel.active { display: flex; animation: fadeIn 0.3s ease; }
+        .setting-item { display: flex; flex-direction: column; gap: 5px; }
+        .setting-item label { font-size: 10px; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
+        .setting-item select, .setting-item button {
+            background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border);
+            color: white; padding: 8px; border-radius: 10px; cursor: pointer; font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="clock-container glass"><div class="clock" id="clock">00:00</div></div>
+        <div class="weather-widget glass">
+            <select id="city-select"></select>
+            <div id="temp" style="margin-left: 10px; font-weight: 500;">--°C</div>
+        </div>
+    </header>
+
+    <main>
+        <div class="logo">MikaruStart</div>
+        <div class="search-container">
+            <form id="search-form" action="https://www.google.com/search" method="GET" class="search-bar glass">
+                <input type="text" name="q" id="search-input" placeholder="Search..." autofocus autocomplete="off">
+                <button type="submit" class="search-btn">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 1 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path></svg>
+                </button>
+            </form>
+        </div>
+
+        <div class="shortcuts">
+            <a href="https://github.com" class="shortcut-item glass" title="GitHub"><svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
+            <a href="https://youtube.com" class="shortcut-item glass" title="YouTube"><svg viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+            <a href="https://discord.com" class="shortcut-item glass" title="Discord"><svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037 19.736 19.736 0 0 0-4.885 1.515.069.069 0 0 0-.032.027C.533 9.048-.32 13.579.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.862-1.297 1.197-1.99a.076.076 0 0 0-.041-.105 13.11 13.11 0 0 1-1.872-.89.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.196.373.291a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.89.076.076 0 0 0-.041.106c.335.693.735 1.36 1.197 1.99a.078.078 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.03z"/></svg></a>
+            <a href="https://t.me" class="shortcut-item glass" title="Telegram"><svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zM17.5 8.083l-1.926 9.08c-.145.64-.524.796-1.06.495l-2.936-2.164-1.417 1.364c-.156.156-.287.287-.588.287l.211-3.001 5.46-4.932c.237-.21-.051-.328-.368-.117l-6.75 4.25-2.907-.908c-.633-.198-.645-.633.132-.934l11.366-4.38c.526-.192.986.123.826.855z"/></svg></a>
+            <a href="https://instagram.com" class="shortcut-item glass" title="Instagram"><svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.332 3.608 1.308.975.975 1.245 2.242 1.308 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.332 2.633-1.308 3.608-.975.975-2.242 1.245-3.608 1.308-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.332-3.608-1.308-.975-.975-1.245-2.242-1.308-3.608-.058-1.266-.07-1.646-.07-4.85s.012-3.584.07-4.85c.062-1.366.332-2.633 1.308-3.608.975-.975 2.242-1.245 3.608-1.308 1.266-.058 1.646-.07 4.85-.07M12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.2 4.353 2.612 6.765 6.973 6.965 1.28.058 1.688.072 4.947.072s3.667-.014 4.947-.072c4.351-.2 6.763-2.612 6.963-6.965.059-1.28.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.352-2.612-6.765-6.965-6.965C15.667.014 15.26 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg></a>
+        </div>
+    </main>
+
+    <footer>
+        <p class="disclaimer">Instagram — продукт компании Meta Platforms Inc., деятельность которой запрещена на территории Российской Федерации.</p>
+    </footer>
+
+    <div class="settings-icon glass" onclick="toggleSettings()"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.487.487 0 0 0-.59.22L3.91 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47.01.59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div>
+
+    <div class="settings-panel glass" id="settings-panel">
+        <div class="setting-item"><label id="label-lang">Язык</label><select id="lang-select" onchange="changeLang()"><option value="ru">Русский</option><option value="en">English</option></select></div>
+        <div class="setting-item"><label id="label-engine">Поисковик</label><select id="engine-select" onchange="changeEngine()"><option value="google">Google</option><option value="yandex">Yandex</option></select></div>
+        <div class="setting-item"><label id="label-color">Тема фона</label><button onclick="nextGradient()" id="btn-next">Следующий градиент</button></div>
+    </div>
+
+    <script>
+        const translations = {
+            ru: { placeholder: "Поиск...", labelLang: "Язык", labelEngine: "Поисковик", labelColor: "Тема", btnNext: "Сменить цвет" },
+            en: { placeholder: "Search...", labelLang: "Language", labelEngine: "Engine", labelColor: "Theme", btnNext: "Change color" }
+        };
+
+        const gradients = [
+            "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", "linear-gradient(135deg, #141e30, #243b55)",
+            "linear-gradient(135deg, #232526, #414345)", "linear-gradient(135deg, #1a1a24, #0d0d14)",
+            "linear-gradient(135deg, #000428, #004e92)", "linear-gradient(135deg, #1f1c2c, #928dab)",
+            "linear-gradient(135deg, #2c3e50, #000000)", "linear-gradient(135deg, #373b44, #4286f4)",
+            "linear-gradient(135deg, #434343, #000000)", "linear-gradient(135deg, #093028, #237A57)",
+            "linear-gradient(135deg, #1e3c72, #2a5298)", "linear-gradient(135deg, #2b5876, #4e4376)",
+            "linear-gradient(135deg, #16222A, #3A6073)", "linear-gradient(135deg, #051937, #004d7a)",
+            "linear-gradient(135deg, #141517, #2c2d30)", "linear-gradient(135deg, #1b2735, #090a0f)",
+            "linear-gradient(135deg, #283048, #859398)", "linear-gradient(135deg, #200122, #6f0000)",
+            "linear-gradient(135deg, #0b8793, #360033)", "linear-gradient(135deg, #4b6cb7, #182848)",
+            "linear-gradient(135deg, #5f2c82, #49a09d)", "linear-gradient(135deg, #2193b0, #6dd5ed)",
+            "linear-gradient(135deg, #3a1c71, #d76d77)", "linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)",
+            "linear-gradient(135deg, #00c6ff, #0072ff)", "linear-gradient(135deg, #40e0d0, #ff8c00, #ff0080)",
+            "linear-gradient(135deg, #3E5151, #DECBA4)", "linear-gradient(135deg, #114357, #F29492)",
+            "linear-gradient(135deg, #02aab0, #00cdac)", "linear-gradient(135deg, #2c3e50, #4ca1af)"
+        ];
+        let currentGrad = 0;
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function toggleSettings() { document.getElementById('settings-panel').classList.toggle('active'); }
+
+        function nextGradient() {
+            currentGrad = (currentGrad + 1) % gradients.length;
+            document.body.style.background = gradients[currentGrad];
+        }
+
+        function changeLang() {
+            const lang = document.getElementById('lang-select').value;
+            const t = translations[lang];
+            document.getElementById('search-input').placeholder = t.placeholder;
+            document.getElementById('label-lang').textContent = t.labelLang;
+            document.getElementById('label-engine').textContent = t.labelEngine;
+            document.getElementById('label-color').textContent = t.labelColor;
+            document.getElementById('btn-next').textContent = t.btnNext;
+        }
+
+        function changeEngine() {
+            const engine = document.getElementById('engine-select').value;
+            const form = document.getElementById('search-form');
+            if(engine === 'yandex') {
+                form.action = "https://yandex.ru/search/";
+                document.getElementById('search-input').name = "text";
+            } else {
+                form.action = "https://www.google.com/search";
+                document.getElementById('search-input').name = "q";
+            }
+        }
+
+        const cities = ["Москва", "Нью-Йорк", "Лондон", "Токио", "Париж", "Дубай", "Пекин", "Берлин", "Сингапур", "Рим", "Мадрид", "Сеул", "Стамбул", "Бангкок", "Вена", "Прага", "Амстердам", "Барселона", "Сидней", "Торонто", "Милан", "Лиссабон", "Шанхай", "Гонконг", "Дели", "Венеция", "Мюнхен", "Копенгаген", "Осло", "Хельсинки", "Цюрих", "Варшава", "Стокгольм", "Дублин", "Чикаго", "Майами", "Лос-Анджелес", "Сан-Франциско", "Лас-Вегас", "Рио-де-Жанейро", "Буэнос-Айрес", "Кейптаун", "Мехико", "Каир", "Касабланка", "Афины", "Будапешт", "Брюссель", "Ницца", "Анталья"];
+        const sel = document.getElementById('city-select');
+        cities.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = c; sel.appendChild(opt); });
+
+        sel.onchange = () => { document.getElementById('temp').textContent = `${Math.floor(Math.random() * 20 + 10)}°C`; };
+        sel.onchange();
+    </script>
+</body>
+</html>
